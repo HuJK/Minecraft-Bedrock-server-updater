@@ -40,8 +40,6 @@ def getDWurl():
 def oslistdir(path):
     return list(filter((lambda x:x[0] != "."),os.listdir(serverFolder)))
 
-print("Starting server...")
-subprocess.call(["tmux", "new", "-d", "-s", "MC_BDRK" , "./bedrock_server"] , cwd=serverFolderExe)
 
 def setProperties(P,V):
     print("Set " + P + " to " + V)
@@ -55,18 +53,26 @@ def setProperties(P,V):
         spfp.write("\n".join(sp))
 
         
-        
+def srartServer():
+    print("Starting server...")
+    subprocess.call(["tmux", "new", "-d", "-s", "MC_BDRK" , "bash"] , cwd=serverFolderExe)
+    time.sleep(1)
+    subprocess.call(["tmux", "send-keys", "-t", "MC_BDRK","while true; do ./bedrock_server; echo Server stopped. Restarting in 10 seconds...; sleep 10; done", "Enter"])
 def stopServer():
     print("Stopping server...")
     subprocess.call(["tmux", "send-keys", "-t", "MC_BDRK","stop"])
     time.sleep(1)
     subprocess.call(["tmux", "send-keys", "-t", "MC_BDRK","Enter"])
     time.sleep(5)
+    subprocess.call(["tmux", "send-keys", "-t", "MC_BDRK","C-c"])
+    time.sleep(1)
     subprocess.call(["tmux", "kill-session", "-t", "MC_BDRK"])
 
 
 atexit.register(stopServer)
 
+
+srartServer()
 while(True):
     dwurl = getDWurl()
     fname = dwurl.split("/")[-1]
@@ -87,6 +93,6 @@ while(True):
         if(fristRun==True):
             setProperties("difficulty",difficulty)
             setProperties("max-players",str(20))
-        print("Running new server")
-        subprocess.call(["tmux", "new", "-d", "-s", "MC_BDRK" , "./bedrock_server"] , cwd=serverFolderExe)
+        srartServer()
+        
     time.sleep(86400)
