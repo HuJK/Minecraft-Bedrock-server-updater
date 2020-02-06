@@ -97,6 +97,7 @@ while(True):
         if(fristRun==True):
             setProperties("difficulty",difficulty)
             setProperties("max-players",str(20))
+            setProperties("content-log-file-enabled","true")
         srartServer()
         
     time.sleep(86400)
