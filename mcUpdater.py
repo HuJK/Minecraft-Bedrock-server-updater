@@ -1,11 +1,12 @@
 #!/usr/bin/python3
-import requests
 from bs4 import BeautifulSoup
 import os
-import time
-import subprocess
 import sys
+import time
 import atexit
+import shutil
+import requests
+import subprocess
 
 serverFolder = 'serverZip'
 serverFolderExe = 'serverFolder'
@@ -58,6 +59,7 @@ def srartServer():
     subprocess.call(["tmux", "new", "-d", "-s", "MC_BDRK" , "bash"] , cwd=serverFolderExe)
     time.sleep(1)
     subprocess.call(["tmux", "send-keys", "-t", "MC_BDRK","while true; do ./bedrock_server; echo Server stopped. Restarting in 10 seconds...; sleep 10; done", "Enter"])
+
 def stopServer():
     print("Stopping server...")
     subprocess.call(["tmux", "send-keys", "-t", "MC_BDRK","stop"])
@@ -75,21 +77,23 @@ atexit.register(stopServer)
 srartServer()
 while(True):
     dwurl = getDWurl()
-    fname = dwurl.split("/")[-1]
-    currentVersion = oslistdir(serverFolder)[0] if len(oslistdir(serverFolder)) != 0 else "(No old version found)"
-    if currentVersion != fname:
-        print("New Minecraft version found: " + fname)
-        print("Start downloading: " + fname)
+    newVersion = dwurl.split("/")[-1]
+    oldVersion = oslistdir(serverFolder)[0] if len(oslistdir(serverFolder)) != 0 else "(No old version found)"
+    if oldVersion != newVersion:
+        print("New Minecraft version found: " + newVersion)
+        print("Start downloading: " + newVersion)
         myfile = requests.get(dwurl)
-        open(serverFolder + "/" + fname, 'wb').write(myfile.content)
-        print("Remove old version: " + currentVersion)
+        open(serverFolder + "/" + newVersion, 'wb').write(myfile.content)
+        print("Remove old version: " + oldVersion)
         try:
-            os.remove(serverFolder + "/" + currentVersion)
+            os.remove(serverFolder + "/" + oldVersion)
         except:
             pass
         stopServer()
+        shutil.move(serverFolderExe + "/server.properties", serverFolderExe + "/server.properties.bak")
         print("Extracting new server from zip")
-        subprocess.call(["unzip", "-o", "-q", serverFolder + "/" + fname , "-d" ,  serverFolderExe])
+        subprocess.call(["unzip", "-o", "-q", serverFolder + "/" + newVersion , "-d" ,  serverFolderExe])
+        shutil.move(serverFolderExe + "/server.properties.bak", serverFolderExe + "/server.properties")
         if(fristRun==True):
             setProperties("difficulty",difficulty)
             setProperties("max-players",str(20))
