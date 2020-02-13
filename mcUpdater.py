@@ -10,7 +10,7 @@ import subprocess
 
 serverFolder = 'serverZip'
 serverFolderExe = 'serverFolder'
-fristRun = False
+
 
 difficulty = 'hard'
 if len(sys.argv) >1:
@@ -21,16 +21,26 @@ if len(sys.argv) >1:
     elif sys.argv[1] == 'hard':
         difficulty = 'hard'
 
-if not os.path.isdir(serverFolder):
-    print("First run. Creating serverFolder")
-    os.makedirs(serverFolder)
-    fristRun = True
-if not os.path.isdir(serverFolderExe):
-    print("First run. Creating serverFolder")
-    os.makedirs(serverFolderExe)
-    fristRun = True
+def initialize():
+    #Check serverFolder has only 1 file
+    if len(oslistdir(serverFolder)) > 1:
+        raise AssertionError("This folder can only have 1 file:" + serverFolder)
+    #Setup folders
+    fristRun = False
+    if not os.path.isdir(serverFolder):
+        print("First run. Creating serverFolder")
+        os.makedirs(serverFolder)
+        fristRun = True
+    if not os.path.isdir(serverFolderExe):
+        os.makedirs(serverFolderExe)
+        fristRun = True
+    if(fristRun==True):
+        setProperties("difficulty",difficulty)#I think in miltiplayer mode, we can cooperate eachother, so difficulty=hard make this game more challengeable.
+        setProperties("max-players",str(20))  #Java edition default setting.
+        setProperties("content-log-file-enabled","true") #Enable log
     
 def getDWurl():
+    #get minecraft bedrock server dounload URL
     MCurl = requests.get('https://www.minecraft.net/en-us/download/server/bedrock').text
     MCSoup =  BeautifulSoup(MCurl, 'html.parser')
     for dwbtn in MCSoup.findAll("a",{"class":"btn btn-disabled-outline mt-4 downloadlink"}):
@@ -73,7 +83,7 @@ def stopServer():
 
 atexit.register(stopServer)
 
-
+initialize()
 srartServer()
 while(True):
     dwurl = getDWurl()
@@ -90,14 +100,12 @@ while(True):
         except:
             pass
         stopServer()
+        #Backup old server.properties to server.properties.bak
         shutil.move(serverFolderExe + "/server.properties", serverFolderExe + "/server.properties.bak")
         print("Extracting new server from zip")
         subprocess.call(["unzip", "-o", "-q", serverFolder + "/" + newVersion , "-d" ,  serverFolderExe])
+        #Restore server.properties from server.properties.bak
         shutil.move(serverFolderExe + "/server.properties.bak", serverFolderExe + "/server.properties")
-        if(fristRun==True):
-            setProperties("difficulty",difficulty)
-            setProperties("max-players",str(20))
-            setProperties("content-log-file-enabled","true")
         srartServer()
         
     time.sleep(86400)
