@@ -64,7 +64,7 @@ def setProperties(P,V):
         spfp.write("\n".join(sp))
 
         
-def srartServer():
+def startServer():
     print("Starting server...")
     subprocess.call(["tmux", "new", "-d", "-s", "MC_BDRK" , "bash"] , cwd=serverFolderExe)
     time.sleep(1)
@@ -85,7 +85,7 @@ def stopServer():
 atexit.register(stopServer)
 
 initialize()
-srartServer()
+startServer()
 while(True):
     dwurl = getDWurl()
     newVersion = dwurl.split("/")[-1]
@@ -107,6 +107,6 @@ while(True):
         subprocess.call(["unzip", "-o", "-q", serverFolder + "/" + newVersion , "-d" ,  serverFolderExe])
         #Restore server.properties from server.properties.bak
         shutil.move(serverFolderExe + "/server.properties.bak", serverFolderExe + "/server.properties")
-        srartServer()
+        startServer()
         
     time.sleep(86400)
