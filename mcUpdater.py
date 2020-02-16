@@ -68,7 +68,6 @@ def srartServer():
     print("Starting server...")
     subprocess.call(["tmux", "new", "-d", "-s", "MC_BDRK" , "bash"] , cwd=serverFolderExe)
     time.sleep(1)
-    
     subprocess.call(["tmux", "send-keys", "-t", "MC_BDRK","set +e", "Enter"])#don't bail out of bash script
     subprocess.call(["tmux", "send-keys", "-t", "MC_BDRK","while true; do ./bedrock_server; echo Server stopped. Restarting in 10 seconds...; sleep 10; done", "Enter"])
 
