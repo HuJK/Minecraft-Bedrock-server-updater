@@ -87,26 +87,28 @@ atexit.register(stopServer)
 initialize()
 startServer()
 while(True):
-    dwurl = getDWurl()
-    newVersion = dwurl.split("/")[-1]
-    oldVersion = oslistdir(serverFolder)[0] if len(oslistdir(serverFolder)) != 0 else "(No old version found)"
-    if oldVersion != newVersion:
-        print("New Minecraft version found: " + newVersion)
-        print("Start downloading: " + newVersion)
-        myfile = requests.get(dwurl)
-        open(serverFolder + "/" + newVersion, 'wb').write(myfile.content)
-        print("Remove old version: " + oldVersion)
-        try:
-            os.remove(serverFolder + "/" + oldVersion)
-        except:
-            pass
-        stopServer()
-        #Backup old server.properties to server.properties.bak
-        shutil.move(serverFolderExe + "/server.properties", serverFolderExe + "/server.properties.bak")
-        print("Extracting new server from zip")
-        subprocess.call(["unzip", "-o", "-q", serverFolder + "/" + newVersion , "-d" ,  serverFolderExe])
-        #Restore server.properties from server.properties.bak
-        shutil.move(serverFolderExe + "/server.properties.bak", serverFolderExe + "/server.properties")
-        startServer()
-        
+    try:
+        dwurl = getDWurl()
+        newVersion = dwurl.split("/")[-1]
+        oldVersion = oslistdir(serverFolder)[0] if len(oslistdir(serverFolder)) != 0 else "(No old version found)"
+        if oldVersion != newVersion:
+            print("New Minecraft version found: " + newVersion)
+            print("Start downloading: " + newVersion)
+            myfile = requests.get(dwurl)
+            open(serverFolder + "/" + newVersion, 'wb').write(myfile.content)
+            print("Remove old version: " + oldVersion)
+            try:
+                os.remove(serverFolder + "/" + oldVersion)
+            except:
+                pass
+            stopServer()
+            #Backup old server.properties to server.properties.bak
+            shutil.move(serverFolderExe + "/server.properties", serverFolderExe + "/server.properties.bak")
+            print("Extracting new server from zip")
+            subprocess.call(["unzip", "-o", "-q", serverFolder + "/" + newVersion , "-d" ,  serverFolderExe])
+            #Restore server.properties from server.properties.bak
+            shutil.move(serverFolderExe + "/server.properties.bak", serverFolderExe + "/server.properties")
+            startServer()
+    except Exception as e:
+        print(e)
     time.sleep(86400)
