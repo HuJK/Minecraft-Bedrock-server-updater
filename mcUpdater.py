@@ -8,11 +8,11 @@ import shutil
 import requests
 import subprocess
 
-serverFolder = 'serverZip'
-serverFolderExe = 'serverFolder'
+serverFolder = 'downloadbedrock'
+serverFolderExe = 'bedrock'
 
 
-difficulty = 'hard'
+difficulty = 'peaceful'
 if len(sys.argv) >1:
     if sys.argv[1] == 'easy':
         difficulty = 'easy'
@@ -20,22 +20,24 @@ if len(sys.argv) >1:
         difficulty = 'normal'
     elif sys.argv[1] == 'hard':
         difficulty = 'hard'
+    elif sys.argv[1] == 'peaceful':
+        difficulty = 'peaceful'
 
 def initialize():
     #Check serverFolder has only 1 file
     if len(oslistdir(serverFolder)) > 1:
         raise AssertionError("This folder can only have 1 file:" + serverFolder)
     #Setup folders
-    fristRun = False
+    firstRun = False
     if not os.path.isdir(serverFolder):
         print("First run. Creating serverFolder")
         os.makedirs(serverFolder)
-        fristRun = True
+        firstRun = True
     if not os.path.isdir(serverFolderExe):
         os.makedirs(serverFolderExe)
-        fristRun = True
-    if(fristRun==True):
-        setProperties("difficulty",difficulty)#I think in miltiplayer mode, we can cooperate eachother, so difficulty=hard make this game more challengeable.
+        firstRun = True
+    if(firstRun==True):
+        setProperties("difficulty",difficulty)#I think in multiplayer mode, we can cooperate with each other, so difficulty=hard make this game more challenging.
         setProperties("max-players",str(20))  #Java edition default setting.
         setProperties("content-log-file-enabled","true") #Enable log
     
@@ -103,11 +105,17 @@ while(True):
                 pass
             stopServer()
             #Backup old server.properties to server.properties.bak
+            print("Backing up server properties, whitelist and permissions")
             shutil.move(serverFolderExe + "/server.properties", serverFolderExe + "/server.properties.bak")
+            shutil.move(serverFolderExe + "/whitelist.json", serverFolderExe + "/whitelist.json.bak")
+            shutil.move(serverFolderExe + "/permissions.json", serverFolderExe + "/permissions.json.bak")
             print("Extracting new server from zip")
             subprocess.call(["unzip", "-o", "-q", serverFolder + "/" + newVersion , "-d" ,  serverFolderExe])
             #Restore server.properties from server.properties.bak
+            print("Restoring original server properties, whitelist and permissions")
             shutil.move(serverFolderExe + "/server.properties.bak", serverFolderExe + "/server.properties")
+            shutil.move(serverFolderExe + "/whitelist.json.bak", serverFolderExe + "/whitelist.json")
+            shutil.move(serverFolderExe + "/permissions.json.bak", serverFolderExe + "/permissions.json")
             startServer()
     except Exception as e:
         print(e)
