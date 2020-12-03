@@ -5,9 +5,10 @@ A script that will auto update and run vanilla Minecraft bedrock server
 
 Please install equivalent package if you use another OS
 ```
-pip3 install beautifulsoup4 requests shutil atexit
+
 apt-get update
-apt-get -y install tmux unzip libcurl4
+apt-get -y install tmux unzip libcurl4 python3 python3-pip
+pip3 install beautifulsoup4 requests
 ```
 
 ## How to use
