@@ -12,7 +12,7 @@ serverFolder = 'downloadbedrock'
 serverFolderExe = 'bedrock'
 
 
-difficulty = 'peaceful'
+difficulty = 'hard'
 if len(sys.argv) >1:
     if sys.argv[1] == 'easy':
         difficulty = 'easy'
@@ -23,12 +23,10 @@ if len(sys.argv) >1:
     elif sys.argv[1] == 'peaceful':
         difficulty = 'peaceful'
 
+firstRun = False
 def initialize():
-    #Check serverFolder has only 1 file
-    if len(oslistdir(serverFolder)) > 1:
-        raise AssertionError("This folder can only have 1 file:" + serverFolder)
     #Setup folders
-    firstRun = False
+    global firstRun
     if not os.path.isdir(serverFolder):
         print("First run. Creating serverFolder")
         os.makedirs(serverFolder)
@@ -36,6 +34,11 @@ def initialize():
     if not os.path.isdir(serverFolderExe):
         os.makedirs(serverFolderExe)
         firstRun = True
+    #Check serverFolder has only 1 file
+    if len(oslistdir(serverFolder)) > 1:
+        raise AssertionError("This folder can only have 1 file:" + serverFolder)
+
+def initializeiProperties():
     if(firstRun==True):
         setProperties("difficulty",difficulty)#I think in multiplayer mode, we can cooperate with each other, so difficulty=hard make this game more challenging.
         setProperties("max-players",str(20))  #Java edition default setting.
@@ -98,25 +101,30 @@ while(True):
             print("Start downloading: " + newVersion)
             myfile = requests.get(dwurl)
             open(serverFolder + "/" + newVersion, 'wb').write(myfile.content)
-            print("Remove old version: " + oldVersion)
-            try:
-                os.remove(serverFolder + "/" + oldVersion)
-            except:
-                pass
             stopServer()
-            #Backup old server.properties to server.properties.bak
-            print("Backing up server properties, whitelist and permissions")
-            shutil.move(serverFolderExe + "/server.properties", serverFolderExe + "/server.properties.bak")
-            shutil.move(serverFolderExe + "/whitelist.json", serverFolderExe + "/whitelist.json.bak")
-            shutil.move(serverFolderExe + "/permissions.json", serverFolderExe + "/permissions.json.bak")
+            if firstRun == False:
+                print("Remove old version: " + oldVersion)
+                try:
+                    os.remove(serverFolder + "/" + oldVersion)
+                except:
+                    pass
+                #Backup old server.properties to server.properties.bak
+                print("Backing up server properties, whitelist and permissions")
+                shutil.move(serverFolderExe + "/server.properties", serverFolderExe + "/server.properties.bak")
+                shutil.move(serverFolderExe + "/whitelist.json", serverFolderExe + "/whitelist.json.bak")
+                shutil.move(serverFolderExe + "/permissions.json", serverFolderExe + "/permissions.json.bak")
             print("Extracting new server from zip")
             subprocess.call(["unzip", "-o", "-q", serverFolder + "/" + newVersion , "-d" ,  serverFolderExe])
-            #Restore server.properties from server.properties.bak
-            print("Restoring original server properties, whitelist and permissions")
-            shutil.move(serverFolderExe + "/server.properties.bak", serverFolderExe + "/server.properties")
-            shutil.move(serverFolderExe + "/whitelist.json.bak", serverFolderExe + "/whitelist.json")
-            shutil.move(serverFolderExe + "/permissions.json.bak", serverFolderExe + "/permissions.json")
+            if firstRun == True:
+                initializeiProperties()
+            else:
+                #Restore server.properties from server.properties.bak
+                print("Restoring original server properties, whitelist and permissions")
+                shutil.move(serverFolderExe + "/server.properties.bak", serverFolderExe + "/server.properties")
+                shutil.move(serverFolderExe + "/whitelist.json.bak", serverFolderExe + "/whitelist.json")
+                shutil.move(serverFolderExe + "/permissions.json.bak", serverFolderExe + "/permissions.json")
             startServer()
+            firstRun = False
     except Exception as e:
         print(e)
     time.sleep(86400)
