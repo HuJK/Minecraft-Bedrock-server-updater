@@ -18,7 +18,7 @@ python3 mcUpdater.py
 And than it will auto download and run minecraft bedrock server for you.
 And it will check update everyday.
 
-if you want run it in background, run this:
+if you want to run it in background, run this:
 ```
 tmux new -s MC_BDRK_Updater -d ./mcUpdater.py
 ```
