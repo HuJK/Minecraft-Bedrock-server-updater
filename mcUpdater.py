@@ -39,6 +39,8 @@ def initialize():
     if not os.path.isdir(serverFolderExe):
         os.makedirs(serverFolderExe)
         firstRun = True
+    if not os.path.isfile(serverFolderExe + "/server.properties"):
+        firstRun = True
     #Check serverFolder has only 1 file
     if len(oslistdir(serverFolder)) > 1:
         raise AssertionError("This folder can only have 1 file:" + serverFolder)
@@ -142,9 +144,18 @@ while(True):
             else:
                 #Restore server.properties from server.properties.bak
                 print("Restoring original server properties, whitelist and permissions")
-                shutil.move(serverFolderExe + "/server.properties.bak", serverFolderExe + "/server.properties")
-                shutil.move(serverFolderExe + "/whitelist.json.bak", serverFolderExe + "/whitelist.json")
-                shutil.move(serverFolderExe + "/permissions.json.bak", serverFolderExe + "/permissions.json")
+                try:
+                    shutil.move(serverFolderExe + "/server.properties.bak", serverFolderExe + "/server.properties")
+                except FileNotFoundError as e:
+                    print(e)
+                try:
+                    shutil.move(serverFolderExe + "/whitelist.json.bak", serverFolderExe + "/whitelist.json")
+                except FileNotFoundError as e:
+                    print(e)
+                try:
+                    shutil.move(serverFolderExe + "/permissions.json.bak", serverFolderExe + "/permissions.json")
+                except FileNotFoundError as e:
+                    print(e)
             startServer()
             firstRun = False
     except Exception as e:
