@@ -8,8 +8,13 @@ import shutil
 import requests
 import subprocess
 
+
 serverFolder = 'downloadbedrock'
 serverFolderExe = 'bedrock'
+
+httpheaders = {
+    'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+}
 
 
 difficulty = 'hard'
@@ -46,7 +51,7 @@ def initializeiProperties():
     
 def getDWurl():
     #get minecraft bedrock server dounload URL
-    MCurl = requests.get('https://www.minecraft.net/en-us/download/server/bedrock').text
+    MCurl = requests.get('https://www.minecraft.net/en-us/download/server/bedrock',headers=httpheaders).text
     MCSoup =  BeautifulSoup(MCurl, 'html.parser')
     for dwbtn in MCSoup.findAll("a",{"class":"btn btn-disabled-outline mt-4 downloadlink"}):
         if  dwbtn['data-platform'] == 'serverBedrockLinux':
@@ -71,6 +76,13 @@ def setProperties(P,V):
         
 def startServer():
     print("Starting server...")
+    if not os.path.isfile(serverFolderExe + "/bedrock_server"):
+        print("Server file not found, wait download.")
+        for root, dirs, files in os.walk(serverFolder):
+            for f in files:
+                os.unlink(os.path.join(root, f))
+            for d in dirs:
+                shutil.rmtree(os.path.join(root, d))
     subprocess.call(["tmux", "new", "-d", "-s", "MC_BDRK" , "bash"] , cwd=serverFolderExe)
     time.sleep(1)
     subprocess.call(["tmux", "send-keys", "-t", "MC_BDRK","set +e", "Enter"])#don't bail out of bash script
@@ -91,6 +103,7 @@ atexit.register(stopServer)
 
 initialize()
 startServer()
+
 while(True):
     try:
         dwurl = getDWurl()
@@ -99,7 +112,7 @@ while(True):
         if oldVersion != newVersion:
             print("New Minecraft version found: " + newVersion)
             print("Start downloading: " + newVersion)
-            myfile = requests.get(dwurl)
+            myfile = requests.get(dwurl,headers=httpheaders)
             open(serverFolder + "/" + newVersion, 'wb').write(myfile.content)
             stopServer()
             if firstRun == False:
@@ -110,9 +123,18 @@ while(True):
                     pass
                 #Backup old server.properties to server.properties.bak
                 print("Backing up server properties, whitelist and permissions")
-                shutil.move(serverFolderExe + "/server.properties", serverFolderExe + "/server.properties.bak")
-                shutil.move(serverFolderExe + "/whitelist.json", serverFolderExe + "/whitelist.json.bak")
-                shutil.move(serverFolderExe + "/permissions.json", serverFolderExe + "/permissions.json.bak")
+                try:
+                    shutil.move(serverFolderExe + "/server.properties", serverFolderExe + "/server.properties.bak")
+                except FileNotFoundError as e:
+                    print(e)
+                try:
+                    shutil.move(serverFolderExe + "/whitelist.json", serverFolderExe + "/whitelist.json.bak")
+                except FileNotFoundError as e:
+                    print(e)
+                try:
+                    shutil.move(serverFolderExe + "/permissions.json", serverFolderExe + "/permissions.json.bak")
+                except FileNotFoundError as e:
+                    print(e)
             print("Extracting new server from zip")
             subprocess.call(["unzip", "-o", "-q", serverFolder + "/" + newVersion , "-d" ,  serverFolderExe])
             if firstRun == True:
